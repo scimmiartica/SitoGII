@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulatore Didattico ADIDA</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --card-bg: #1e293b;
+            --card-inner: #0f172a;
+            --border-color: #334155;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-red: #ef4444;
+            --accent-yellow: #f59e0b;
+            --accent-gray: #64748b;
+            --accent-white: #ffffff;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            padding: 14px 20px;
+            font-size: 13px;
+        }
+
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 16px;
+            max-width: 1420px;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 1024px) {
+            .dashboard-container { grid-template-columns: 1fr; }
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            height: fit-content;
+        }
+
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--text-main);
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .form-label {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .select-input, .number-input {
+            background: var(--card-inner);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-main);
+            padding: 8px 10px;
+            font-size: 0.85rem;
+            outline: none;
+            width: 100%;
+        }
+
+        .select-input:focus, .number-input:focus {
+            border-color: var(--accent-red);
+        }
+
+        /* Slider Box */
+        .slider-card {
+            background: var(--card-inner);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 12px;
+        }
+
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .slider-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+        }
+
+        .slider-badge {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid var(--accent-red);
+            color: var(--accent-red);
+            font-weight: 800;
+            font-size: 1.05rem;
+            padding: 2px 12px;
+            border-radius: 6px;
+        }
+
+        .range-slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: var(--border-color);
+            outline: none;
+            accent-color: var(--accent-red);
+            cursor: pointer;
+        }
+
+        .slider-caption {
+            margin-top: 8px;
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            line-height: 1.35;
+        }
+
+        .section-title {
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .grid-2col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .param-box {
+            background: var(--card-inner);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px;
+        }
+
+        .param-box .lbl {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            margin-bottom: 2px;
+        }
+
+        .param-box .val {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .param-box .val.yellow { color: var(--accent-yellow); }
+
+        .horizon-card {
+            background: var(--card-inner);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: 8px;
+            padding: 10px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .horizon-title { font-size: 0.8rem; font-weight: 700; color: var(--text-main); }
+        .horizon-sub { font-size: 0.68rem; color: var(--text-muted); }
+
+        .horizon-badge {
+            background: rgba(245, 158, 11, 0.15);
+            border: 1px solid var(--accent-yellow);
+            color: var(--accent-yellow);
+            font-size: 1rem;
+            font-weight: 800;
+            padding: 4px 10px;
+            border-radius: 6px;
+        }
+
+        /* Main Panel Right */
+        .main-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        /* Banner Status */
+        .status-banner {
+            border-radius: 10px;
+            padding: 12px 16px;
+            transition: all 0.2s;
+        }
+
+        .status-banner.optimal {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid #ffffff;
+        }
+
+        .status-banner.suboptimal {
+            background: rgba(245, 158, 11, 0.12);
+            border: 1px solid var(--accent-yellow);
+        }
+
+        .status-banner.superoptimal {
+            background: rgba(239, 68, 68, 0.12);
+            border: 1px solid var(--accent-red);
+        }
+
+        .banner-title {
+            font-size: 0.95rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+
+        .status-banner.optimal .banner-title { color: #ffffff; }
+        .status-banner.suboptimal .banner-title { color: var(--accent-yellow); }
+        .status-banner.superoptimal .banner-title { color: var(--accent-red); }
+
+        .banner-desc {
+            font-size: 0.82rem;
+            color: var(--text-main);
+            opacity: 0.9;
+            line-height: 1.4;
+        }
+
+        /* KPI Grid */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        @media (max-width: 1100px) {
+            .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        .kpi-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 12px 14px;
+        }
+
+        .kpi-lbl {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .kpi-val {
+            font-size: 1.4rem;
+            font-weight: 800;
+        }
+
+        .kpi-val.pink { color: var(--accent-red); }
+        .kpi-val.yellow { color: var(--accent-yellow); }
+        .kpi-val.cyan { color: var(--accent-white); }
+        .kpi-val.purple { color: var(--text-muted); }
+
+        /* Chart Cards */
+        .chart-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 14px 16px;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .chart-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .custom-legend {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .legend-box {
+            width: 100px;
+            height: 10px;
+            border-radius: 2px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 220px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- SIDEBAR -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                Quanto conta S?
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="selectScenario">Scenario di Domanda</label>
+                <select id="selectScenario" class="select-input">
+                    <option value="intermittent">1. Domanda Intermittente</option>
+                    <option value="regime_change">2. Prova questo!</option>
+                </select>
+            </div>
+
+            <div class="slider-card">
+                <div class="slider-header">
+                    <span class="slider-title">Aggregazione ADIDA (s):</span>
+                    <span class="slider-badge" id="badgeS">8</span>
+                </div>
+                <input type="range" class="range-slider" id="sliderS" min="1" max="24" value="8" step="1">
+                <p class="slider-caption">
+                    Modifica la dimensione del blocco temporale per osservare come varia la precisione logistica.
+                </p>
+            </div>
+
+            <div class="slider-card">
+                <div class="slider-header">
+                    <span class="slider-title">Parametro Smorzamento (&alpha;):</span>
+                    <span class="slider-badge" id="badgeAlpha">0.30</span>
+                </div>
+                <input type="range" class="range-slider" id="sliderAlpha" min="0.05" max="0.95" value="0.30" step="0.05">
+                <p class="slider-caption">
+                    Regola la reattività del livellamento esponenziale sulle medie aggregate.
+                </p>
+            </div>
+
+            <div class="section-title">PARAMETRI LOGISTICI FISSATI</div>
+            <div class="grid-2col">
+                <div class="param-box">
+                    <div class="lbl">Lead Time (L):</div>
+                    <div class="val">4 giorni</div>
+                </div>
+                <div class="param-box">
+                    <div class="lbl">Revisione (R):</div>
+                    <div class="val yellow">4 giorni</div>
+                </div>
+            </div>
+
+            <div class="horizon-card">
+                <div>
+                    <div class="horizon-title">Orizzonte di Rischio (L + R):</div>
+                    <div class="horizon-sub">Finestra temporale da coprire</div>
+                </div>
+                <div class="horizon-badge">8 giorni</div>
+            </div>
+        </div>
+
+        <!-- MAIN PANEL -->
+        <div class="main-panel">
+            <div class="status-banner optimal" id="statusBanner">
+                <div class="banner-title" id="bannerTitle">
+                    Punto Ottimale Raggiunto! (s = L + R = 8)
+                </div>
+                <div class="banner-desc" id="bannerDesc">
+                    Annullando lo scostamento tra stima della domanda e orizzonte decisionale, elimini la necessità di disaggregare!!!
+                </div>
+            </div>
+
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-lbl">Costo Totale</div>
+                    <div class="kpi-val pink" id="kpiTotalCost">€ 0</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-lbl">Unità Stockout</div>
+                    <div class="kpi-val yellow" id="kpiStockout">0 pz</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-lbl">Giacenza Media</div>
+                    <div class="kpi-val cyan" id="kpiAvgStock">0 pz</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-lbl">Ordini Emessi</div>
+                    <div class="kpi-val purple" id="kpiOrders">0 ordini</div>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div class="chart-title" id="chart1Title">
+                        Domanda Reale vs Previsione ADIDA (s = 8)
+                    </div>
+                    <div class="custom-legend">
+                        <div class="legend-item">
+                            <div class="legend-box" style="background: rgba(148, 163, 184, 0.5); border: 1px solid #94a3b8;"></div>
+                            <span>Domanda Reale (Y_t)</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-box" style="background: #ef4444;"></div>
+                            <span>Previsione ADIDA (Y_hat)</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="chart1Canvas"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div class="chart-title" id="chart2Title">
+                        Magazzino & Ordini (Revisione Fissa Ogni R = 4 giorni)
+                    </div>
+                    <div class="custom-legend">
+                        <div class="legend-item">
+                            <div class="legend-box" style="background: #ffffff;"></div>
+                            <span>Giacenza Magazzino (Scorte)</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-box" style="background: #f59e0b;"></div>
+                            <span>Ordine Emesso</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="chart2Canvas"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const T = 48;
+        const L = 4;
+        const R = 4;
+        const H = L + R; // 8
+
+        // Costi logistici unitari fissati
+        const holdingCostUnit = 2;
+        const stockoutCostUnit = 25;
+
+        let chart1 = null;
+        let chart2 = null;
+
+        function generateDemand(scenario) {
+            let Y = new Array(T).fill(0);
+            if (scenario === 'intermittent') {
+                // Domanda intermittente pura ad intervalli irregolari tra gli impulsi
+                const pulseIndices = [3, 8, 16, 22, 28, 36, 43];
+                const pulseValues  = [15, 14, 16, 8, 15, 17, 14];
+                pulseIndices.forEach((idx, i) => { Y[idx] = pulseValues[i]; });
+            } else if (scenario === 'regime_change') {
+                // Cambio di regime: Alta domanda nella prima metà, crollo strutturale nella seconda
+                const phase1Indices = [2, 7, 12, 17, 21];
+                const phase1Values  = [18, 20, 17, 19, 18];
+                const phase2Indices = [28, 36, 44];
+                const phase2Values  = [4, 3, 4];
+
+                phase1Indices.forEach((idx, i) => { Y[idx] = phase1Values[i]; });
+                phase2Indices.forEach((idx, i) => { Y[idx] = phase2Values[i]; });
+            }
+            return Y;
+        }
+
+        function runSimulation() {
+            const s = parseInt(document.getElementById('sliderS').value);
+            const alpha = parseFloat(document.getElementById('sliderAlpha').value);
+            const scenario = document.getElementById('selectScenario').value;
+
+            document.getElementById('badgeS').innerText = s;
+            document.getElementById('badgeAlpha').innerText = alpha.toFixed(2);
+
+            const Y = generateDemand(scenario);
+
+            let Y_hat = new Array(T).fill(0);
+            let stock = new Array(T).fill(0);
+            let stockouts = new Array(T).fill(0);
+            let orders = new Array(T).fill(0);
+            let arrivals = new Array(T + L + 40).fill(0);
+
+            let currentStock = 16;
+            const initialDailyRate = 2.0;
+
+            for (let t = 0; t < T; t++) {
+                // Calcolo previsione ADIDA in tempo reale per evitare Look-Ahead Bias
+                let completedBuckets = Math.floor(t / s);
+                let dailyRate = initialDailyRate;
+
+                if (completedBuckets > 0) {
+                    let X = [];
+                    for (let b = 0; b < completedBuckets; b++) {
+                        let start = b * s;
+                        let end = (b + 1) * s;
+                        let sum = 0;
+                        for (let i = start; i < end; i++) sum += Y[i];
+                        X.push(sum);
+                    }
+
+                    let S = X[0];
+                    for (let b = 1; b < X.length; b++) {
+                        S = alpha * X[b] + (1 - alpha) * S;
+                    }
+                    dailyRate = S / s;
+                }
+
+                Y_hat[t] = dailyRate;
+
+                // Consegna ordini
+                currentStock += arrivals[t];
+
+                // Consumo della domanda
+                let d = Y[t];
+                if (currentStock >= d) {
+                    currentStock -= d;
+                    stockouts[t] = 0;
+                } else {
+                    stockouts[t] = d - currentStock;
+                    currentStock = 0;
+                }
+                stock[t] = currentStock;
+
+                // Decisione di riordino al punto di revisione (ogni R giorni)
+                if (t % R === 0) {
+                    let pipeline = 0;
+                    for (let i = t + 1; i <= t + L; i++) {
+                        pipeline += arrivals[i];
+                    }
+                    let IP = currentStock + pipeline;
+
+                    let forecastH = dailyRate * H;
+                    
+                    // Scorta di sicurezza proporzionale al disallineamento strutturale tra s e l'orizzonte di rischio H
+                    let safetyStock = 3.0 * (1 + 0.5 * Math.abs(s - H) / H);
+                    let targetStock = Math.round(forecastH + safetyStock);
+
+                    if (IP < targetStock) {
+                        let q = targetStock - IP;
+                        if (q > 0) {
+                            orders[t] = q;
+                            arrivals[t + L] += q;
+                        }
+                    }
+                }
+            }
+
+            let totalHolding = stock.reduce((a, b) => a + b, 0);
+            let totalStockout = stockouts.reduce((a, b) => a + b, 0);
+            let orderCount = orders.filter(x => x > 0).length;
+            let totalCost = (totalHolding * holdingCostUnit) + (totalStockout * stockoutCostUnit);
+
+            // Aggiornamento interfaccia e banner
+            const banner = document.getElementById('statusBanner');
+            const title = document.getElementById('bannerTitle');
+            const desc = document.getElementById('bannerDesc');
+
+            if (s === H) {
+                banner.className = 'status-banner optimal';
+                title.innerText = `Euristica manageriale raggiunta!! (s = L + R = ${H})`;
+                desc.innerText = `L'aggregazione ADIDA (s = ${s}) coincide esattamente con l'orizzonte di rischio (L + R = ${H}). Le distorsioni tra la stima della domanda e l'orizzonte decisionale sono annullate, garantendo zero rotture di stock e il minimo costo totale.`;
+            } else if (s < H) {
+                banner.className = 'status-banner suboptimal';
+                title.innerText = `Sotto-aggregazione (s = ${s} < L + R = ${H})`;
+                desc.innerText = `L'aggregazione s è inferiore all'orizzonte di rischio. Il modello sottovaluta il fabbisogno accumulando troppi zeri nei blocchi brevi, causando rotture di stock (${Math.round(totalStockout)} pz) e penali elevate.`;
+            } else {
+                banner.className = 'status-banner superoptimal';
+                title.innerText = `Sovraggregazione (s = ${s} > L + R = ${H})`;
+                desc.innerText = `L'aggregazione s supera l'orizzonte di rischio. La stima bloccata su finestre ampie perde di reattività e genera un sovraccarico continuo di giacenza in magazzino (Giacenza media: ${Math.round(totalHolding / T)} pz).`;
+            }
+
+            document.getElementById('kpiTotalCost').innerText = `€ ${Math.round(totalCost)}`;
+            document.getElementById('kpiStockout').innerText = `${Math.round(totalStockout)} pz`;
+            document.getElementById('kpiAvgStock').innerText = `${Math.round(totalHolding / T)} pz`;
+            document.getElementById('kpiOrders').innerText = `${orderCount} ordini`;
+
+            document.getElementById('chart1Title').innerText = `Domanda Reale vs Previsione ADIDA (s = ${s})`;
+
+            updateCharts(Y, Y_hat, stock, orders);
+        }
+
+        function initCharts() {
+            const labels = Array.from({ length: T }, (_, i) => `t=${i + 1}`);
+
+            const ctx1 = document.getElementById('chart1Canvas').getContext('2d');
+            chart1 = new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Domanda Reale (Y_t)',
+                            data: [],
+                            backgroundColor: 'rgba(148, 163, 184, 0.5)',
+                            borderColor: '#94a3b8',
+                            borderWidth: 1,
+                            barPercentage: 0.55
+                        },
+                        {
+                            label: 'Previsione ADIDA (Y_hat)',
+                            data: [],
+                            type: 'line',
+                            borderColor: '#ef4444',
+                            borderWidth: 2.5,
+                            pointRadius: 0,
+                            stepped: 'middle'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: { duration: 150 },
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { color: '#334155' }, ticks: { color: '#94a3b8', font: { size: 9 } } },
+                        y: { grid: { color: '#334155' }, ticks: { color: '#94a3b8' }, beginAtZero: true }
+                    }
+                }
+            });
+
+            const ctx2 = document.getElementById('chart2Canvas').getContext('2d');
+            chart2 = new Chart(ctx2, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Giacenza Magazzino',
+                            data: [],
+                            borderColor: '#ffffff',
+                            backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                            borderWidth: 2,
+                            pointRadius: 3,
+                            pointBackgroundColor: '#ffffff',
+                            fill: true,
+                            stepped: 'before'
+                        },
+                        {
+                            label: 'Ordine Emesso',
+                            data: [],
+                            type: 'bar',
+                            backgroundColor: 'rgba(245, 158, 11, 0.85)',
+                            borderColor: '#f59e0b',
+                            borderWidth: 1,
+                            barPercentage: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: { duration: 150 },
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { color: '#334155' }, ticks: { color: '#94a3b8', font: { size: 9 } } },
+                        y: { grid: { color: '#334155' }, ticks: { color: '#94a3b8' }, beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        function updateCharts(Y, Y_hat, stock, orders) {
+            chart1.data.datasets[0].data = Y;
+            chart1.data.datasets[1].data = Y_hat;
+            chart1.update();
+
+            chart2.data.datasets[0].data = stock;
+            chart2.data.datasets[1].data = orders;
+            chart2.update();
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            initCharts();
+
+            document.getElementById('sliderS').addEventListener('input', runSimulation);
+            document.getElementById('sliderAlpha').addEventListener('input', runSimulation);
+            document.getElementById('selectScenario').addEventListener('change', runSimulation);
+
+            runSimulation();
+        });
+    </script>
+</body>
+</html>
