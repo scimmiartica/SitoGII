@@ -597,7 +597,7 @@
             if (s === H) {
                 banner.className = 'status-banner optimal';
                 title.innerText = `Euristica manageriale raggiunta!! (s = L + R = ${H})`;
-                desc.innerText = `L'aggregazione ADIDA (s = ${s}) coincide esattamente con l'orizzonte di rischio (L + R = ${H}). Le distorsioni tra la stima della domanda e l'orizzonte decisionale sono annullate, garantendo zero rotture di stock e il minimo costo totale.`;
+                desc.innerText = `L'aggregazione ADIDA (s = ${s}) coincide esattamente con l'orizzonte di rischio (L + R = ${H}). Le distorsioni tra la stima della domanda e l'orizzonte decisionale sono annullate.;
             } else if (s < H) {
                 banner.className = 'status-banner suboptimal';
                 title.innerText = `Sotto-aggregazione (s = ${s} < L + R = ${H})`;
